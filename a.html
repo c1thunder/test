@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboard New User</title>
+    <!-- Third-party CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    
+    <!-- Third-party JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+			.progress-steps {
+			margin: 20px 0;
+		}
+
+		.step {
+			margin: 15px 0;
+			padding: 10px;
+			border-radius: 5px;
+			background-color: #f8f9fa;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.step-icon, .step-check {
+			width: 20px;
+		}
+
+		.step-text {
+			flex-grow: 1;
+		}
+
+		.step.active {
+			background-color: #e3f2fd;
+		}
+
+		.step.completed {
+			background-color: #f0f9f0;
+		}
+        body {
+            background-color: #f8f9fa;
+            padding-bottom: 60px;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .page-title {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #3498db;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+            border-radius: 0.375rem;
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .group-selection {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background-color: white;
+        }
+        .group-checkbox {
+            margin-bottom: 0.5rem;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+            display: none;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 1px solid #dee2e6;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .section-divider {
+            border-bottom: 1px solid #e9ecef;
+            margin: 1.5rem 0;
+            padding-bottom: 0.5rem;
+        }
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        .form-section-title {
+            color: #007bff;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .alert {
+            margin-bottom: 1rem;
+        }
+        .invalid-feedback {
+            display: block;
+        }
+        .nav-link {
+            color: #2c3e50;
+        }
+        .nav-link:hover {
+            color: #007bff;
+        }
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+		.required-field::after {
+			content: " *";
+			color: red;
+			font-weight: bold;
+		}
+
+		.required-note {
+			color: red;
+			font-size: 0.875rem;
+			margin-bottom: 1rem;
+		}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-users-cog"></i> User Management System
+            </a>
+            <div class="navbar-nav">
+                {% if 'user_id' in session %}
+                <a class="nav-item nav-link" href="{{ url_for('admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-item nav-link" href="{{ url_for('audit_trail') }}">
+                    <i class="fas fa-history"></i> Audit Trail
+                </a>
+                <a class="nav-item nav-link" href="{{ url_for('profile') }}">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <a class="nav-item nav-link" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2 class="page-title">
+            <i class="fas fa-user-plus"></i> Onboard New User
+        </h2>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-alt"></i> User Information Form
+            </div>
+            <div class="card-body">
+			<div class="required-note">
+				<i class="fas fa-info-circle"></i> Fields marked with an asterisk (*) are required
+			</div>
+                <form method="POST" action="{{ url_for('onboard_user_route') }}" id="onboardForm" novalidate>
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-id-card"></i> Basic Information
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label required-field">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                <div class="invalid-feedback">Please enter a first name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name">
+                                <div class="invalid-feedback">Please enter a last name.</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="initials" class="form-label">Initials</label>
+                                <input type="text" class="form-control" id="initials" name="initials">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="employee_id" class="form-label required-field">Employee ID</label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                                <div class="invalid-feedback">Please enter an employee ID.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-phone"></i> Contact Information
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email_name" class="form-label required-field">Email Name</label>
+                                <input type="text" class="form-control" id="email_name" name="email_name" required>
+                                <div class="invalid-feedback">Please enter an email name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email_domain" class="form-label required-field">Email Domain</label>
+                                <select class="form-select" id="email_domain" name="email_domain" required>
+                                    <option value="">Select Domain</option>
+                                    {% for domain in email_domains %}
+                                    <option value="{{ domain }}">{{ domain }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select an email domain.</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telephone_number" class="form-label">Telephone Number</label>
+                                <input type="tel" class="form-control" id="telephone_number" name="telephone_number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="mobile_phone" class="form-label">Mobile Phone</label>
+                                <input type="tel" class="form-control" id="mobile_phone" name="mobile_phone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ip_phone" class="form-label">IP Phone</label>
+                                <input type="text" class="form-control" id="ip_phone" name="ip_phone" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Preview</label>
+                                <p id="email_preview" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employment Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-briefcase"></i> Employment Information
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="position" class="form-label required-field">Position</label>
+                                <select class="form-select" id="position" name="position" required onchange="updateGroups()">
+                                    <option value="">Select Position</option>
+                                    {% for position in positions %}
+                                    <option value="{{ position }}">{{ position }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a position.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="department" class="form-label required-field">Department</label>
+                                <select class="form-select" id="department" name="department" required>
+								<option value="">Select Department</option>
+								<option value="Accounts & Finance">Accounts & Finance</option>
+								<option value="Administrative & Compliance">Administrative & Compliance</option>
+								<option value="AI & Simulation">AI & Simulation</option>
+								<option value="Analytical">Analytical</option>
+								<option value="Business Development">Business Development</option>
+								<option value="Business Strategy & Marketing">Business Strategy & Marketing</option>
+								<option value="Business Unit (APM 4.0)">Business Unit (APM 4.0)</option>
+								<option value="Business Unit (Cybersecurity)">Business Unit (Cybersecurity)</option>
+								<option value="Business Unit (Manufacturing)">Business Unit (Manufacturing)</option>
+								<option value="Business Unit (MES)">Business Unit (MES)</option>
+								<option value="Business Unit (Product Sales)">Business Unit (Product Sales)</option>
+								<option value="Business Unit (SCADA)">Business Unit (SCADA)</option>
+								<option value="Business Unit (Solution Architecture)">Business Unit (Solution Architecture)</option>
+								<option value="Continuous Improvement">Continuous Improvement</option>
+								<option value="Cybersecurity Consultancy">Cybersecurity Consultancy</option>
+								<option value="Engineering (Control & Automation)">Engineering (Control & Automation)</option>
+								<option value="Engineering (Instruments & Simulation)">Engineering (Instruments & Simulation)</option>
+								<option value="Engineering Division">Engineering Division</option>
+								<option value="Enterprise Asset Management">Enterprise Asset Management</option>
+								<option value="Field Instruments">Field Instruments</option>
+								<option value="GoDigital Product Development">GoDigital Product Development</option>
+								<option value="Health, Safety & Environment">Health, Safety & Environment (HSE)</option>
+								<option value="Human Resources & Administration">Human Resources & Administration</option>
+								<option value="Information Technology">Information Technology</option>
+								<option value="Integrated Engineering">Integrated Engineering</option>
+								<option value="IoT Product Development">IoT Product Development</option>
+								<option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
+								<option value="Management">Management</option>
+								<option value="Process & Digital Solutions">Process & Digital Solutions (PDS)</option>
+								<option value="Project Consultancy">Project Consultancy</option>
+								<option value="Project Management">Project Management</option>
+								<option value="Project Sales">Project Sales</option>
+								<option value="SCADA Technical">SCADA Technical</option>
+								<option value="Secretarial">Secretarial</option>
+								<option value="Security">Security</option>
+								<option value="Service & Maintenance">Service & Maintenance</option>
+								<option value="Software Development">Software Development</option>
+								<option value="Solution Integration">Solution Integration</option>
+								<option value="System & Service">System & Service</option>
+								<option value="Technical & Engineering">Technical & Engineering</option>
+								<option value="Technical Solution Consultancy">Technical Solution Consultancy (TSC)</option>
+							</select>
+                                <div class="invalid-feedback">Please select a department.</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="office" class="form-label required-field">Office</label>
+                                <select class="form-select" id="office" name="office" required>
+                                    <option value="">Select Office</option>
+                                    {% for office in offices %}
+                                    <option value="{{ office }}">{{ office }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select an office.</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+								<label for="manager" class="form-label required-field">Manager</label>
+								<select class="form-select" id="manager" name="manager" required>
+									<option value="">Select Manager</option>
+									{% for manager in managers %}
+									<option value="{{ manager.sAMAccountName }}">
+										{{ manager.displayName }}
+									</option>
+									{% endfor %}
+								</select>
+								<div class="invalid-feedback">Please select a manager.</div>
+							</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="onboarding_date" class="form-label required-field">Onboarding Date</label>
+                                <input type="date" class="form-control" id="onboarding_date" name="onboarding_date" required>
+                                <div class="invalid-feedback">Please select an onboarding date.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label required-field">Initial Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="invalid-feedback">Please enter an initial password.</div>
+                                <small class="form-text text-muted">
+                                    Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <input type="text" class="form-control" id="description" name="description" readonly>
+                                <small class="form-text text-muted">Auto-generated based on office and first name</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group Memberships Section -->
+                    <div class="form-section">
+						<h3 class="form-section-title">
+							<i class="fas fa-users"></i> Group Memberships
+						</h3>
+						<div class="mb-3">
+							<input type="text" class="form-control" id="group-search" placeholder="Search groups...">
+						</div>
+						<div class="group-selection">
+							{% for group in groups %}
+							<div class="group-checkbox">
+								<input class="form-check-input" type="checkbox" name="groups" value="{{ group }}" id="group_{{ loop.index }}">
+								<label class="form-check-label" for="group_{{ loop.index }}">
+									{{ group }}
+								</label>
+							</div>
+							{% endfor %}
+						</div>
+						<small class="form-text text-muted">You can search for groups using the search bar above.</small>
+					</div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Onboard User
+                        </button>
+                    </div>
+                </form>
+                <div class="loader" id="loader"></div>
+            </div>
+        </div>
+		<!-- Add this after the form -->
+<div id="onboarding-progress-root"></div>
+<script type="text/babel">
+const OnboardingProgress = () => {
+    const [progress, setProgress] = React.useState(0);
+    const [message, setMessage] = React.useState('');
+    const [showModal, setShowModal] = React.useState(false);
+    const [error, setError] = React.useState(null);
+    const [showRetry, setShowRetry] = React.useState(false);
+
+    React.useEffect(() => {
+        const form = document.getElementById('onboardForm');
+        if (form) {
+            form.addEventListener('submit', handleFormSubmit);
+        }
+        return () => {
+            if (form) {
+                form.removeEventListener('submit', handleFormSubmit);
+            }
+        };
+    }, []);
+
+    const handleFormSubmit = async (event) => {
+        event.preventDefault();
+        if (!window.validateForm()) {
+            return;
+        }
+        
+        setShowModal(true);
+        setProgress(0);
+        setMessage('Initializing user creation...');
+        setError(null);
+        setShowRetry(false);
+
+        try {
+            const eventSource = new EventSource('/create_user');
+            
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                setProgress(data.progress);
+                setMessage(data.text);
+
+                if (data.progress === 100) {
+                    eventSource.close();
+                    submitFormData(new FormData(form));
+                }
+            };
+
+            eventSource.onerror = () => {
+                handleError('Error connecting to server');
+                eventSource.close();
+            };
+        } catch (error) {
+            handleError('An unexpected error occurred');
+        }
+    };
+
+    const submitFormData = async (formData) => {
+        try {
+            const response = await fetch('/onboard_user', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setProgress(100);
+                setMessage('User created successfully!');
+                setTimeout(() => {
+                    window.location.href = '/admin_dashboard';
+                }, 1000);
+            } else {
+                handleError(data.message || 'Error creating user');
+            }
+        } catch (error) {
+            handleError('Error submitting form');
+        }
+    };
+
+    const handleError = (message) => {
+        setError(message);
+        setShowRetry(true);
+        setProgress(0);
+    };
+
+    const handleClose = () => {
+        setShowModal(false);
+        setError(null);
+        setShowRetry(false);
+        setProgress(0);
+    };
+
+    const handleRetry = () => {
+        setError(null);
+        setShowRetry(false);
+        const form = document.getElementById('onboardForm');
+        if (form) {
+            form.dispatchEvent(new Event('submit'));
+        }
+    };
+
+    return (
+        <div className={`modal ${showModal ? 'show d-block' : ''}`} style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title">Creating User Account</h5>
+                    </div>
+                    <div className="modal-body">
+                        <div className="progress mb-3">
+                            <div 
+                                className="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar"
+                                style={{width: `${progress}%`}}
+                                aria-valuenow={progress}
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        
+                        <p className="text-center mb-3">
+                            {error ? <span className="text-danger">{error}</span> : message}
+                        </p>
+
+                        {showRetry && (
+                            <div className="text-center">
+                                <button onClick={handleClose} className="btn btn-secondary me-2">
+                                    Close
+                                </button>
+                                <button onClick={handleRetry} className="btn btn-primary">
+                                    Retry
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Mount the React component
+const root = ReactDOM.createRoot(document.getElementById('onboarding-progress-root'));
+root.render(<OnboardingProgress />);
+</script>
+
+    </div>
+    <footer class="footer">
+        <div class="container text-center">
+            <span class="text-muted">Version <a href="#" id="versionLink">0.9.1425 beta</a></span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form elements
+	document.addEventListener('DOMContentLoaded', function() {
+    const emailName = document.getElementById('email_name');
+    const emailDomain = document.getElementById('email_domain');
+    const emailPreview = document.getElementById('email_preview');
+    const employeeId = document.getElementById('employee_id');
+    const ipPhone = document.getElementById('ip_phone');
+    const officeSelect = document.getElementById('office');
+    const positionSelect = document.getElementById('position');
+    const dateInput = document.getElementById('onboarding_date');
+    const firstNameInput = document.getElementById('first_name');
+    const descriptionInput = document.getElementById('description');
+
+    // Set minimum date for onboarding_date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+
+    // Update email preview
+    function updateEmailPreview() {
+        emailPreview.textContent = emailName.value + emailDomain.value;
+    }
+
+    // Update IP phone when employee ID changes
+    function updateIpPhone() {
+        ipPhone.value = employeeId.value;
+    }
+
+    // Update description based on office and first name
+    function updateDescription() {
+        const selectedOffice = officeSelect.value;
+        const firstName = firstNameInput.value;
+        const companyShortforms = {
+            "CTI Resources": "CTI",
+            "Infra Total Care": "INFRA",
+            "YNY Technology": "YNY",
+            "Pro Cahaya Engineering": "PCE",
+            "Pro Cahaya Holdings": "PCH",
+            "Pro Cahaya Industries": "PCI",
+            "PC Installation and Contracting": "PCIC",
+            "PC Maintenance & Services": "PCM",
+            "Precision Control Penang": "PCP",
+            "Precision Control": "PCSB",
+            "Pro Cahaya Tenaga": "PCT",
+            "Viola System": "VIOLA",
+            "YNY Holdings": "YNYH"
+        };
+
+        if (selectedOffice && firstName) {
+            const shortform = companyShortforms[selectedOffice] || selectedOffice;
+            descriptionInput.value = `${shortform} - ${firstName}`;
+            descriptionInput.readOnly = true;
+        }
+    }
+
+    // Validate form
+    window.validateForm = function() {
+        let isValid = true;
+        form.querySelectorAll('[required]').forEach(function(element) {
+            if (!element.value) {
+                isValid = false;
+                element.classList.add('is-invalid');
+            } else {
+                element.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate password complexity
+        const password = document.getElementById('password').value;
+        if (password) {
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            const isLongEnough = password.length >= 8;
+
+            if (!(hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough)) {
+                isValid = false;
+                document.getElementById('password').classList.add('is-invalid');
+            }
+        }
+
+        return isValid;
+    }
+
+    // Event listeners for field updates
+    emailName.addEventListener('input', updateEmailPreview);
+    emailDomain.addEventListener('change', updateEmailPreview);
+    employeeId.addEventListener('input', updateIpPhone);
+    officeSelect.addEventListener('change', updateDescription);
+    firstNameInput.addEventListener('input', updateDescription);
+
+    // Initialize form
+    updateEmailPreview();
+    updateDescription();
+
+    // Initialize Select2
+    $(document).ready(function() {
+        $('#position').select2();
+        $('#department').select2();
+        $('#office').select2();
+        $('#manager').select2();
+        $('#email_domain').select2();
+    });
+});
+</script>
+</body>
+</html>
